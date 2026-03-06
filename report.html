@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Report — HyderabadTransport</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="logo"><div class="logo-box">🚌</div>Hyderabad<span>Transport</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li><li><a href="routes.html">Find Routes</a></li>
+      <li><a href="tracking.html">Live Track</a></li><li><a href="report.html" class="on">Report</a></li>
+      <li><a href="notifications.html">Alerts</a></li>
+    </ul>
+    <div class="nav-r" id="navR"></div>
+    <button class="ham" onclick="document.getElementById('navLinks').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="wrap" style="padding-bottom:60px">
+  <div class="page-hdr fu">
+    <h1>⚡ <span class="grad-text">Report Delay & Crowd</span></h1>
+    <p>Help fellow commuters by reporting delays and crowding</p>
+  </div>
+
+  <div class="grid2">
+    <!-- DELAY FORM -->
+    <div class="card fu">
+      <h3 style="margin-bottom:6px">⏱ Report Bus Delay</h3>
+      <p style="color:var(--t2);font-size:0.83rem;margin-bottom:22px">Tell others if your bus is running late</p>
+
+      <div class="fg"><label class="lbl">Bus Number</label>
+        <select class="inp" id="dBus"><option value="">Select bus...</option></select></div>
+
+      <div class="fg"><label class="lbl">Delay Duration</label>
+        <div class="d-opts">
+          <button class="d-chip" onclick="selDelay(this,'10')">+10 min</button>
+          <button class="d-chip" onclick="selDelay(this,'20')">+20 min</button>
+          <button class="d-chip" onclick="selDelay(this,'30+')">30+ min</button>
+        </div>
+        <input type="hidden" id="dVal"/>
+      </div>
+
+      <div class="fg"><label class="lbl">Your Current Stop</label>
+        <select class="inp" id="dStop"><option value="">Select stop...</option></select></div>
+
+      <div class="fg"><label class="lbl">Note (Optional)</label>
+        <textarea class="inp" id="dNote" rows="3" placeholder="E.g. Stuck in traffic near Ameerpet..."></textarea></div>
+
+      <button class="btn btn-p btn-full" onclick="submitDelay()">Submit Delay Report →</button>
+    </div>
+
+    <!-- CROWD FORM -->
+    <div class="card fu" style="animation-delay:.15s">
+      <h3 style="margin-bottom:6px">👥 Report Crowd Status</h3>
+      <p style="color:var(--t2);font-size:0.83rem;margin-bottom:22px">How crowded is your bus right now?</p>
+
+      <div class="fg"><label class="lbl">Bus Number</label>
+        <select class="inp" id="cBus"><option value="">Select bus...</option></select></div>
+
+      <div class="fg"><label class="lbl">Crowd Level</label>
+        <div class="crowd-row">
+          <button class="crowd-btn e" onclick="selCrowd(this,'Empty')">
+            <span class="ci">🟢</span>Empty<div style="font-size:0.7rem;color:var(--t3);margin-top:2px">Seats available</div></button>
+          <button class="crowd-btn m" onclick="selCrowd(this,'Moderate')">
+            <span class="ci">🟡</span>Moderate<div style="font-size:0.7rem;color:var(--t3);margin-top:2px">Some seats</div></button>
+          <button class="crowd-btn f" onclick="selCrowd(this,'Full')">
+            <span class="ci">🔴</span>Full<div style="font-size:0.7rem;color:var(--t3);margin-top:2px">Standing room</div></button>
+        </div>
+        <input type="hidden" id="cVal"/>
+      </div>
+
+      <div class="fg"><label class="lbl">Your Current Stop</label>
+        <select class="inp" id="cStop"><option value="">Select stop...</option></select></div>
+
+      <button class="btn btn-p btn-full" onclick="submitCrowd()">Submit Crowd Report →</button>
+    </div>
+  </div>
+
+  <!-- Recent reports -->
+  <div style="margin-top:38px">
+    <h2 style="margin-bottom:18px;font-size:1.35rem">📋 Recent Community Reports</h2>
+    <div class="grid2">
+      <div class="card"><h3 style="margin-bottom:14px">⚡ Latest Delay Reports</h3><div id="rDelays"><p style="color:var(--t2);font-size:0.88rem">No reports yet.</p></div></div>
+      <div class="card"><h3 style="margin-bottom:14px">👥 Latest Crowd Reports</h3><div id="rCrowds"><p style="color:var(--t2);font-size:0.88rem">No reports yet.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<footer><p>🚌 HyderabadTransport — Community-powered reporting</p></footer>
+
+<script>
+const BUSES_LIST=[{n:"224",r:"Mallampet → Koti"},{n:"195",r:"Bachupally → Koti"},{n:"10H",r:"JNTU → Secunderabad"},{n:"127K",r:"Kukatpally → Secunderabad"},{n:"10K",r:"Kukatpally → Ameerpet"},{n:"218",r:"Miyapur → LB Nagar"},{n:"277",r:"Miyapur → LB Nagar"},{n:"224M",r:"Bachupally → Koti"},{n:"187",r:"JNTU → Secunderabad"},{n:"216",r:"Gachibowli → Uppal"},{n:"49M",r:"Gachibowli → Uppal"},{n:"116",r:"Lingampally → Koti"},{n:"115",r:"Lingampally → Koti"}];
+const STOPS_LIST=["Mallampet","Bachupally X Roads","Nizampet X Roads","Nizampet","Kukatpally","KPHB Colony","Balanagar","Ameerpet","Miyapur","JNTU","Nampally","Koti","LB Nagar","Bachupally","Secunderabad","Gachibowli","Hitech City","Madhapur","Punjagutta","Uppal","Lingampally","Sanathnagar","Erragadda","Lakdikapul","Abids","Dilsukhnagar","Mehdipatnam"].sort();
+
+function gR(k,d=[]){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function sR(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getDelays(){return gR('delays',[])} function getCrowds(){return gR('crowds',[])}
+function saveDelays(v){sR('delays',v)} function saveCrowds(v){sR('crowds',v)}
+function getNotifs(){return gR('notifs',[])} function saveNotifs(v){sR('notifs',v)}
+function getCurUser(){try{return JSON.parse(localStorage.getItem('curUser'))}catch{return null}}
+function uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+function timeAgo(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return 'Just now';if(m<60)return m+' min ago';const h=Math.floor(m/60);if(h<24)return h+' hr ago';return Math.floor(h/24)+'d ago';}
+function crowdBadge(l){if(l==='Empty')return '<span class="badge b-g">🟢 Empty</span>';if(l==='Moderate')return '<span class="badge b-y">🟡 Moderate</span>';return '<span class="badge b-r">🔴 Full</span>';}
+
+if(!localStorage.getItem('users'))sR('users',[{id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},{id:'user1',name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}]);
+let tw;function toast(type,title,msg=''){if(!tw){tw=document.createElement('div');tw.className='toast-wrap';document.body.appendChild(tw);}const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span class="t-ico">${ico[type]}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;tw.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+function setupNav(){const u=getCurUser();const r=document.getElementById('navR');if(!r)return;r.innerHTML=u?`<div style="display:flex;align-items:center;gap:8px"><div class="ava">${u.name[0]}</div><span style="font-size:0.87rem;color:var(--t2)">${u.name}</span></div><button class="btn btn-s btn-sm" onclick="localStorage.removeItem('curUser');location.href='index.html'">Logout</button>`:`<a href="login.html" class="btn btn-p btn-sm">Login</a>`;}
+setupNav();
+
+/* Populate selects */
+BUSES_LIST.forEach(b=>{['dBus','cBus'].forEach(id=>{const o=document.createElement('option');o.value=b.n;o.textContent=`Bus ${b.n} — ${b.r}`;document.getElementById(id).appendChild(o);});});
+STOPS_LIST.forEach(s=>{['dStop','cStop'].forEach(id=>{const o=document.createElement('option');o.value=o.textContent=s;document.getElementById(id).appendChild(o);});});
+
+/* Prefill from URL */
+const p=new URLSearchParams(location.search);
+if(p.get('bus')){document.getElementById('dBus').value=p.get('bus');document.getElementById('cBus').value=p.get('bus');}
+
+function selDelay(btn,val){document.querySelectorAll('.d-chip').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');document.getElementById('dVal').value=val;}
+function selCrowd(btn,val){document.querySelectorAll('.crowd-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');document.getElementById('cVal').value=val;}
+
+function submitDelay(){
+  const bn=document.getElementById('dBus').value;
+  const delay=document.getElementById('dVal').value;
+  const stop=document.getElementById('dStop').value;
+  const note=document.getElementById('dNote').value.trim();
+  if(!bn){toast('warning','Select a bus');return;}
+  if(!delay){toast('warning','Select delay duration');return;}
+  const u=getCurUser();
+  const r={id:uid(),bn,delay,stop,note,name:u?u.name:'Anonymous',ts:Date.now()};
+  const ds=getDelays();ds.push(r);saveDelays(ds);
+  const ns=getNotifs();ns.unshift({id:uid(),type:'delay',title:`Delay — Bus ${bn}`,desc:`Bus ${bn} delayed ${delay} min${stop?' at '+stop:''}`,time:'Just now',read:false});saveNotifs(ns);
+  toast('success','Delay Reported!',`Bus ${bn} +${delay} min submitted`);
+  document.getElementById('dBus').value='';document.getElementById('dVal').value='';document.getElementById('dStop').value='';document.getElementById('dNote').value='';
+  document.querySelectorAll('.d-chip').forEach(b=>b.classList.remove('sel'));
+  renderRecent();
+}
+function submitCrowd(){
+  const bn=document.getElementById('cBus').value;
+  const level=document.getElementById('cVal').value;
+  const stop=document.getElementById('cStop').value;
+  if(!bn){toast('warning','Select a bus');return;}
+  if(!level){toast('warning','Select crowd level');return;}
+  const u=getCurUser();
+  const r={id:uid(),bn,level,stop,name:u?u.name:'Anonymous',ts:Date.now()};
+  const cs=getCrowds();cs.push(r);saveCrowds(cs);
+  if(level==='Full'){const ns=getNotifs();ns.unshift({id:uid(),type:'crowd',title:`Heavy Crowd — Bus ${bn}`,desc:`Bus ${bn} is fully packed!`,time:'Just now',read:false});saveNotifs(ns);}
+  toast('success','Crowd Reported!',`Bus ${bn} marked as ${level}`);
+  document.getElementById('cBus').value='';document.getElementById('cVal').value='';document.getElementById('cStop').value='';
+  document.querySelectorAll('.crowd-btn').forEach(b=>b.classList.remove('sel'));
+  renderRecent();
+}
+function renderRecent(){
+  const ds=getDelays().slice(-6).reverse();
+  const cs=getCrowds().slice(-6).reverse();
+  document.getElementById('rDelays').innerHTML=ds.length?ds.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:7px;margin-bottom:7px">
+      <div><div style="font-weight:600;font-size:0.88rem">Bus ${r.bn}</div><div style="color:var(--t3);font-size:0.75rem">${r.stop||'Unknown'} · ${r.name}</div></div>
+      <div style="text-align:right"><span class="badge b-y">+${r.delay} min</span><div style="color:var(--t3);font-size:0.7rem;margin-top:3px">${timeAgo(r.ts)}</div></div>
+    </div>`).join(''):'<p style="color:var(--t2);font-size:0.88rem">No reports yet.</p>';
+  document.getElementById('rCrowds').innerHTML=cs.length?cs.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:7px;margin-bottom:7px">
+      <div><div style="font-weight:600;font-size:0.88rem">Bus ${r.bn}</div><div style="color:var(--t3);font-size:0.75rem">${r.stop||'Unknown'} · ${r.name}</div></div>
+      <div style="text-align:right">${crowdBadge(r.level)}<div style="color:var(--t3);font-size:0.7rem;margin-top:3px">${timeAgo(r.ts)}</div></div>
+    </div>`).join(''):'<p style="color:var(--t2);font-size:0.88rem">No reports yet.</p>';
+}
+renderRecent();
+</script>
+</body>
+</html>

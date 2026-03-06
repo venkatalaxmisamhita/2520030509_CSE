@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin — HyderabadTransport</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="logo"><div class="logo-box">🚌</div>Hyderabad<span>Transport</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Main Site</a></li>
+    </ul>
+    <div class="nav-r" id="navR"></div>
+    <button class="ham" onclick="document.getElementById('navLinks').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="admin-wrap">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:0 8px;margin-bottom:10px">Admin Panel</div>
+    <ul>
+      <li><a href="#" onclick="showTab('dash')" id="s-dash" class="on">📊 Dashboard</a></li>
+      <li><a href="#" onclick="showTab('buses')" id="s-buses">🚌 Manage Buses</a></li>
+      <li><a href="#" onclick="showTab('routes')" id="s-routes">🗺️ Manage Routes</a></li>
+      <li><a href="#" onclick="showTab('reports')" id="s-reports">📋 Reports</a></li>
+      <li><a href="#" onclick="showTab('analytics')" id="s-analytics">📈 Analytics</a></li>
+    </ul>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="adm-c">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="tab-dash">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px;flex-wrap:wrap;gap:12px">
+        <div><h1 style="font-size:1.75rem;margin-bottom:3px">Dashboard</h1><p id="dateStr" style="color:var(--t2);font-size:0.87rem"></p></div>
+        <div style="display:flex;gap:9px">
+          <button class="btn btn-s btn-sm" onclick="refreshDash()">🔄 Refresh</button>
+          <button class="btn btn-p btn-sm" onclick="genDemo()">⚡ Demo Data</button>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat o"><div class="stat-ico">🚌</div><div class="stat-val" id="ds-buses">0</div><div class="stat-lbl">Total Buses</div></div>
+        <div class="stat b"><div class="stat-ico">👤</div><div class="stat-val" id="ds-users">0</div><div class="stat-lbl">Users</div></div>
+        <div class="stat r"><div class="stat-ico">⚡</div><div class="stat-val" id="ds-delays">0</div><div class="stat-lbl">Delay Reports</div></div>
+        <div class="stat g"><div class="stat-ico">🗺️</div><div class="stat-val" id="ds-routes">0</div><div class="stat-lbl">Routes</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3>⚡ Recent Delays</h3></div><div id="dd-delays"><p style="color:var(--t2);font-size:0.88rem">No reports yet.</p></div></div>
+        <div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3>👥 Recent Crowd</h3></div><div id="dd-crowds"><p style="color:var(--t2);font-size:0.88rem">No reports yet.</p></div></div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <h3 style="margin-bottom:14px">📊 Most Reported Buses</h3>
+        <div id="dd-chart"></div>
+      </div>
+    </div>
+
+    <!-- ===== BUSES ===== -->
+    <div id="tab-buses" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <h1 style="font-size:1.75rem">🚌 Manage Buses</h1>
+        <button class="btn btn-p" onclick="openBusModal()">+ Add Bus</button>
+      </div>
+      <div class="card"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bus No.</th><th>Route</th><th>Type</th><th>Capacity</th><th>Actions</th></tr></thead><tbody id="busTable"></tbody></table></div></div>
+    </div>
+
+    <!-- ===== ROUTES ===== -->
+    <div id="tab-routes" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <h1 style="font-size:1.75rem">🗺️ Manage Routes</h1>
+        <button class="btn btn-p" onclick="openRouteModal()">+ Add Route</button>
+      </div>
+      <div class="card"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>From</th><th>To</th><th>Buses</th><th>Duration</th><th>Stops</th><th>Actions</th></tr></thead><tbody id="routeTable"></tbody></table></div></div>
+    </div>
+
+    <!-- ===== REPORTS ===== -->
+    <div id="tab-reports" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:10px">
+        <h1 style="font-size:1.75rem">📋 Community Reports</h1>
+        <button class="btn btn-d btn-sm" onclick="clearAll()">🗑 Clear All</button>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3>⚡ Delay Reports (<span id="dc">0</span>)</h3><button class="btn btn-d btn-sm" onclick="clearDelays()">Clear Delays</button></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bus</th><th>Delay</th><th>Stop</th><th>Note</th><th>By</th><th>Time</th><th>Action</th></tr></thead><tbody id="repDelays"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3>👥 Crowd Reports (<span id="cc">0</span>)</h3><button class="btn btn-d btn-sm" onclick="clearCrowds()">Clear Crowd</button></div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bus</th><th>Level</th><th>Stop</th><th>By</th><th>Time</th><th>Action</th></tr></thead><tbody id="repCrowds"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== ANALYTICS ===== -->
+    <div id="tab-analytics" class="hidden">
+      <div style="margin-bottom:24px"><h1 style="font-size:1.75rem;margin-bottom:4px">📈 Analytics</h1><p style="color:var(--t2)">Insights into route performance</p></div>
+      <div class="stat-grid" style="margin-bottom:22px">
+        <div class="stat o"><div class="stat-ico">⚡</div><div class="stat-val" id="an-d">0</div><div class="stat-lbl">Delay Reports</div></div>
+        <div class="stat b"><div class="stat-ico">👥</div><div class="stat-val" id="an-c">0</div><div class="stat-lbl">Crowd Reports</div></div>
+        <div class="stat r"><div class="stat-ico">🔴</div><div class="stat-val" id="an-f">0</div><div class="stat-lbl">Full Bus Reports</div></div>
+        <div class="stat g"><div class="stat-ico">✅</div><div class="stat-val" id="an-p">—</div><div class="stat-lbl">On-Time %</div></div>
+      </div>
+      <div class="grid2" style="margin-bottom:20px">
+        <div class="card"><h3 style="margin-bottom:14px">🚌 Most Delayed Buses</h3><div id="an-chart1"></div></div>
+        <div class="card"><h3 style="margin-bottom:14px">👥 Crowd Distribution</h3><div id="an-chart2"></div></div>
+      </div>
+      <div class="card" style="margin-bottom:20px"><h3 style="margin-bottom:14px">⏰ Peak Hours (Simulated)</h3><div id="an-peak"></div></div>
+      <div class="card"><h3 style="margin-bottom:14px">🗺️ Route Performance</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Route</th><th>Buses</th><th>Delay Reports</th><th>Crowd Level</th><th>Status</th></tr></thead><tbody id="an-routes"></tbody></table></div></div>
+    </div>
+
+  </div><!-- .adm-c -->
+</div><!-- .admin-wrap -->
+
+<!-- BUS MODAL -->
+<div class="modal-bg hidden" id="busModal" onclick="if(event.target===this)closeBusModal()">
+  <div class="modal">
+    <button class="modal-x" onclick="closeBusModal()">✕</button>
+    <h3 id="bm-title" style="margin-bottom:18px">Add Bus</h3>
+    <input type="hidden" id="bm-id"/>
+    <div class="fg"><label class="lbl">Bus Number</label><input class="inp" id="bm-num" placeholder="e.g. 224M"/></div>
+    <div class="fg"><label class="lbl">Route Description</label><input class="inp" id="bm-route" placeholder="Mallampet → Koti"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label class="lbl">Type</label><select class="inp" id="bm-type"><option>AC</option><option>Non-AC</option><option>Volvo</option><option>Mini</option></select></div>
+      <div class="fg"><label class="lbl">Capacity</label><input class="inp" type="number" id="bm-cap" value="60"/></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-p btn-full" onclick="saveBus()">Save</button>
+      <button class="btn btn-s btn-full" onclick="closeBusModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROUTE MODAL -->
+<div class="modal-bg hidden" id="routeModal" onclick="if(event.target===this)closeRouteModal()">
+  <div class="modal">
+    <button class="modal-x" onclick="closeRouteModal()">✕</button>
+    <h3 id="rm-title" style="margin-bottom:18px">Add Route</h3>
+    <input type="hidden" id="rm-id"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label class="lbl">From</label><input class="inp" id="rm-from" placeholder="Starting point"/></div>
+      <div class="fg"><label class="lbl">To</label><input class="inp" id="rm-to" placeholder="Destination"/></div>
+    </div>
+    <div class="fg"><label class="lbl">Buses (comma separated)</label><input class="inp" id="rm-buses" placeholder="224, 195, 10H"/></div>
+    <div class="fg"><label class="lbl">Stops (comma separated)</label><textarea class="inp" id="rm-stops" rows="2" placeholder="Stop1, Stop2, Stop3..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label class="lbl">Duration</label><input class="inp" id="rm-dur" placeholder="45 min"/></div>
+      <div class="fg"><label class="lbl">Distance</label><input class="inp" id="rm-dist" placeholder="16 km"/></div>
+      <div class="fg"><label class="lbl">First Bus</label><input class="inp" id="rm-first" placeholder="5:30 AM"/></div>
+      <div class="fg"><label class="lbl">Last Bus</label><input class="inp" id="rm-last" placeholder="10:30 PM"/></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-p btn-full" onclick="saveRoute()">Save</button>
+      <button class="btn btn-s btn-full" onclick="closeRouteModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<footer><p>🚌 Admin Panel — HyderabadTransit</p></footer>
+
+<script>
+/* ===== DATA ===== */
+const DEF_BUSES=[
+  {id:"B01",n:"224",  r:"Mallampet → Koti",          type:"AC",    cap:60},
+  {id:"B02",n:"195",  r:"Bachupally → Koti",          type:"Non-AC",cap:60},
+  {id:"B03",n:"10H",  r:"JNTU → Secunderabad",        type:"AC",    cap:80},
+  {id:"B04",n:"127K", r:"Kukatpally → Secunderabad",  type:"Non-AC",cap:60},
+  {id:"B05",n:"10K",  r:"Kukatpally → Ameerpet",      type:"Non-AC",cap:60},
+  {id:"B06",n:"218",  r:"Miyapur → LB Nagar",         type:"AC",    cap:80},
+  {id:"B07",n:"277",  r:"Miyapur → LB Nagar",         type:"Non-AC",cap:80},
+  {id:"B08",n:"224M", r:"Bachupally → Koti",          type:"Non-AC",cap:60},
+];
+const DEF_ROUTES=[
+  {id:"R01",from:"Mallampet",to:"Nizampet",    buses:["224","195","10H"],  stops:["Mallampet","Bachupally X Roads","Nizampet X Roads","Nizampet"],   duration:"25 min",distance:"8 km",firstBus:"5:30 AM",lastBus:"10:30 PM"},
+  {id:"R02",from:"Kukatpally",to:"Ameerpet",   buses:["127K","10K"],       stops:["Kukatpally","KPHB Colony","Balanagar","Ameerpet"],                duration:"35 min",distance:"12 km",firstBus:"5:00 AM",lastBus:"11:00 PM"},
+  {id:"R03",from:"Miyapur",to:"LB Nagar",      buses:["218","277"],        stops:["Miyapur","JNTU","Kukatpally","Ameerpet","Nampally","Koti","LB Nagar"],duration:"90 min",distance:"35 km",firstBus:"5:15 AM",lastBus:"10:45 PM"},
+  {id:"R04",from:"Bachupally",to:"Koti",       buses:["224M","195"],       stops:["Bachupally","Mallampet","Nizampet","JNTU","Kukatpally","Ameerpet","Koti"],duration:"75 min",distance:"28 km",firstBus:"5:30 AM",lastBus:"10:30 PM"},
+  {id:"R05",from:"JNTU",to:"Secunderabad",     buses:["10H","187"],        stops:["JNTU","Kukatpally","Balanagar","Sanathnagar","Erragadda","Secunderabad"],duration:"55 min",distance:"20 km",firstBus:"5:45 AM",lastBus:"11:15 PM"},
+];
+
+function gR(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v||d}catch{return d}}
+function sR(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getBuses() {return gR('buses',DEF_BUSES)}
+function getRoutes(){return gR('routes',DEF_ROUTES)}
+function getUsers() {return gR('users',[])}
+function getDelays(){return gR('delays',[])}
+function getCrowds(){return gR('crowds',[])}
+function saveBuses(v){sR('buses',v)} function saveRoutes(v){sR('routes',v)}
+function saveDelays(v){sR('delays',v)} function saveCrowds(v){sR('crowds',v)}
+function uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+function timeAgo(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return 'Now';if(m<60)return m+'m';const h=Math.floor(m/60);return h<24?h+'h':Math.floor(h/24)+'d';}
+function crowdBadge(l){if(l==='Empty')return '<span class="badge b-g">🟢 Empty</span>';if(l==='Moderate')return '<span class="badge b-y">🟡 Moderate</span>';return '<span class="badge b-r">🔴 Full</span>';}
+
+/* Init users */
+if(!localStorage.getItem('users'))sR('users',[{id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},{id:'user1',name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}]);
+
+/* Toast */
+let tw;function toast(type,title,msg=''){if(!tw){tw=document.createElement('div');tw.className='toast-wrap';document.body.appendChild(tw);}const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span class="t-ico">${ico[type]}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;tw.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+/* Auth guard */
+const cu=gR('curUser',null);
+if(!cu||cu.role!=='admin'){location.href='login.html';}
+document.getElementById('navR').innerHTML=`<div style="display:flex;align-items:center;gap:8px"><div class="ava">${cu?cu.name[0]:'A'}</div><span style="font-size:0.87rem;color:var(--t2)">${cu?cu.name:'Admin'}</span></div><button class="btn btn-s btn-sm" onclick="localStorage.removeItem('curUser');location.href='index.html'">Logout</button>`;
+
+/* ===== TABS ===== */
+const TABS=['dash','buses','routes','reports','analytics'];
+function showTab(t){
+  TABS.forEach(id=>{document.getElementById('tab-'+id).classList.add('hidden');document.getElementById('s-'+id).classList.remove('on');});
+  document.getElementById('tab-'+t).classList.remove('hidden');
+  document.getElementById('s-'+t).classList.add('on');
+  if(t==='dash')refreshDash();
+  if(t==='buses')renderBuses();
+  if(t==='routes')renderRoutes();
+  if(t==='reports')renderReports();
+  if(t==='analytics')renderAnalytics();
+}
+
+/* ===== DASHBOARD ===== */
+document.getElementById('dateStr').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+function refreshDash(){
+  document.getElementById('ds-buses').textContent=getBuses().length;
+  document.getElementById('ds-users').textContent=getUsers().filter(u=>u.role!=='admin').length;
+  document.getElementById('ds-delays').textContent=getDelays().length;
+  document.getElementById('ds-routes').textContent=getRoutes().length;
+  const ds=getDelays().slice(-5).reverse();
+  document.getElementById('dd-delays').innerHTML=ds.length?`<table class="tbl"><thead><tr><th>Bus</th><th>Delay</th><th>Stop</th><th>Time</th></tr></thead><tbody>${ds.map(r=>`<tr><td><span class="chip">${r.bn}</span></td><td><span class="badge b-y">+${r.delay}m</span></td><td style="font-size:0.83rem">${r.stop||'—'}</td><td style="color:var(--t3);font-size:0.78rem">${timeAgo(r.ts)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--t2);font-size:0.88rem">No reports yet.</p>';
+  const cs=getCrowds().slice(-5).reverse();
+  document.getElementById('dd-crowds').innerHTML=cs.length?`<table class="tbl"><thead><tr><th>Bus</th><th>Level</th><th>Stop</th><th>Time</th></tr></thead><tbody>${cs.map(r=>`<tr><td><span class="chip">${r.bn}</span></td><td>${crowdBadge(r.level)}</td><td style="font-size:0.83rem">${r.stop||'—'}</td><td style="color:var(--t3);font-size:0.78rem">${timeAgo(r.ts)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--t2);font-size:0.88rem">No reports yet.</p>';
+  const all=getDelays();const counts={};getBuses().slice(0,8).forEach(b=>counts[b.n]=0);all.forEach(r=>{if(counts[r.bn]!==undefined)counts[r.bn]++;});
+  const maxV=Math.max(...Object.values(counts),1);
+  document.getElementById('dd-chart').innerHTML=`<div class="bar-chart">${Object.entries(counts).map(([bus,c])=>`<div class="bar-item"><div class="bar-fill" style="height:${Math.max(c/maxV*130,4)}px" data-v="${c}"></div><div class="bar-lbl">${bus}</div></div>`).join('')}</div>`;
+}
+refreshDash();
+
+/* ===== BUSES CRUD ===== */
+function renderBuses(){
+  document.getElementById('busTable').innerHTML=getBuses().map(b=>`
+    <tr><td><span class="chip">${b.n}</span></td><td>${b.r}</td><td><span class="badge b-b">${b.type}</span></td><td>${b.cap} seats</td>
+    <td><div style="display:flex;gap:7px"><button class="btn btn-s btn-sm" onclick="editBus('${b.id}')">✏️ Edit</button><button class="btn btn-d btn-sm" onclick="delBus('${b.id}')">🗑 Del</button></div></td>
+    </tr>`).join('');
+}
+function openBusModal(id){
+  document.getElementById('bm-title').textContent=id?'Edit Bus':'Add Bus';
+  document.getElementById('bm-id').value=id||'';
+  if(id){const b=getBuses().find(x=>x.id===id);if(b){document.getElementById('bm-num').value=b.n;document.getElementById('bm-route').value=b.r;document.getElementById('bm-type').value=b.type;document.getElementById('bm-cap').value=b.cap;}}
+  else{document.getElementById('bm-num').value='';document.getElementById('bm-route').value='';document.getElementById('bm-type').value='AC';document.getElementById('bm-cap').value=60;}
+  document.getElementById('busModal').classList.remove('hidden');
+}
+function closeBusModal(){document.getElementById('busModal').classList.add('hidden');}
+function editBus(id){openBusModal(id);}
+function saveBus(){
+  const id=document.getElementById('bm-id').value;
+  const n=document.getElementById('bm-num').value.trim();
+  const r=document.getElementById('bm-route').value.trim();
+  const type=document.getElementById('bm-type').value;
+  const cap=+document.getElementById('bm-cap').value;
+  if(!n||!r){toast('warning','Fill bus number and route');return;}
+  let bs=getBuses();
+  if(id){bs=bs.map(b=>b.id===id?{...b,n,r,type,cap}:b);toast('success','Bus Updated');}
+  else{bs.push({id:uid(),n,r,type,cap});toast('success','Bus Added');}
+  saveBuses(bs);closeBusModal();renderBuses();
+}
+function delBus(id){if(!confirm('Delete this bus?'))return;saveBuses(getBuses().filter(b=>b.id!==id));toast('success','Deleted');renderBuses();}
+
+/* ===== ROUTES CRUD ===== */
+function renderRoutes(){
+  document.getElementById('routeTable').innerHTML=getRoutes().map(r=>`
+    <tr><td style="font-weight:500">${r.from}</td><td style="font-weight:500">${r.to}</td>
+    <td>${r.buses.map(b=>`<span class="chip" style="font-size:0.7rem;padding:2px 8px">${b}</span>`).join(' ')}</td>
+    <td>${r.duration}</td><td style="color:var(--t2);font-size:0.83rem">${r.stops.length} stops</td>
+    <td><div style="display:flex;gap:7px"><button class="btn btn-s btn-sm" onclick="editRoute('${r.id}')">✏️ Edit</button><button class="btn btn-d btn-sm" onclick="delRoute('${r.id}')">🗑 Del</button></div></td>
+    </tr>`).join('');
+}
+function openRouteModal(id){
+  document.getElementById('rm-title').textContent=id?'Edit Route':'Add Route';
+  document.getElementById('rm-id').value=id||'';
+  if(id){const r=getRoutes().find(x=>x.id===id);if(r){document.getElementById('rm-from').value=r.from;document.getElementById('rm-to').value=r.to;document.getElementById('rm-buses').value=r.buses.join(', ');document.getElementById('rm-stops').value=r.stops.join(', ');document.getElementById('rm-dur').value=r.duration;document.getElementById('rm-dist').value=r.distance;document.getElementById('rm-first').value=r.firstBus;document.getElementById('rm-last').value=r.lastBus;}}
+  else{['rm-from','rm-to','rm-buses','rm-stops','rm-dur','rm-dist','rm-first','rm-last'].forEach(id=>document.getElementById(id).value='');}
+  document.getElementById('routeModal').classList.remove('hidden');
+}
+function closeRouteModal(){document.getElementById('routeModal').classList.add('hidden');}
+function editRoute(id){openRouteModal(id);}
+function saveRoute(){
+  const id=document.getElementById('rm-id').value;
+  const from=document.getElementById('rm-from').value.trim();
+  const to=document.getElementById('rm-to').value.trim();
+  const buses=document.getElementById('rm-buses').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const stops=document.getElementById('rm-stops').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const duration=document.getElementById('rm-dur').value.trim()||'—';
+  const distance=document.getElementById('rm-dist').value.trim()||'—';
+  const firstBus=document.getElementById('rm-first').value.trim()||'—';
+  const lastBus=document.getElementById('rm-last').value.trim()||'—';
+  if(!from||!to||!buses.length){toast('warning','Fill From, To and at least one bus');return;}
+  let rs=getRoutes();
+  const data={from,to,buses,stops,duration,distance,firstBus,lastBus};
+  if(id){rs=rs.map(r=>r.id===id?{...r,...data}:r);toast('success','Route Updated');}
+  else{rs.push({id:uid(),...data});toast('success','Route Added');}
+  saveRoutes(rs);closeRouteModal();renderRoutes();
+}
+function delRoute(id){if(!confirm('Delete this route?'))return;saveRoutes(getRoutes().filter(r=>r.id!==id));toast('success','Deleted');renderRoutes();}
+
+/* ===== REPORTS ===== */
+function renderReports(){
+  const ds=getDelays().slice().reverse();
+  const cs=getCrowds().slice().reverse();
+  document.getElementById('dc').textContent=ds.length;
+  document.getElementById('cc').textContent=cs.length;
+  document.getElementById('repDelays').innerHTML=ds.length?ds.map(r=>`<tr><td><span class="chip">${r.bn}</span></td><td><span class="badge b-y">+${r.delay}m</span></td><td style="font-size:0.83rem">${r.stop||'—'}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.8rem;color:var(--t2)">${r.note||'—'}</td><td style="font-size:0.8rem;color:var(--t2)">${r.name}</td><td style="color:var(--t3);font-size:0.78rem">${timeAgo(r.ts)}</td><td><button class="btn btn-d btn-sm" onclick="delDelay('${r.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">No delay reports</td></tr>';
+  document.getElementById('repCrowds').innerHTML=cs.length?cs.map(r=>`<tr><td><span class="chip">${r.bn}</span></td><td>${crowdBadge(r.level)}</td><td style="font-size:0.83rem">${r.stop||'—'}</td><td style="font-size:0.8rem;color:var(--t2)">${r.name}</td><td style="color:var(--t3);font-size:0.78rem">${timeAgo(r.ts)}</td><td><button class="btn btn-d btn-sm" onclick="delCrowd('${r.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px">No crowd reports</td></tr>';
+}
+function delDelay(id){saveDelays(getDelays().filter(r=>r.id!==id));toast('success','Removed');renderReports();}
+function delCrowd(id){saveCrowds(getCrowds().filter(r=>r.id!==id));toast('success','Removed');renderReports();}
+function clearDelays(){if(!confirm('Clear all delay reports?'))return;saveDelays([]);toast('success','Cleared');renderReports();}
+function clearCrowds(){if(!confirm('Clear all crowd reports?'))return;saveCrowds([]);toast('success','Cleared');renderReports();}
+function clearAll(){if(!confirm('Clear ALL reports?'))return;saveDelays([]);saveCrowds([]);toast('success','All Cleared');renderReports();}
+
+/* ===== ANALYTICS ===== */
+function renderAnalytics(){
+  const ds=getDelays(),cs=getCrowds(),rs=getRoutes();
+  document.getElementById('an-d').textContent=ds.length;
+  document.getElementById('an-c').textContent=cs.length;
+  document.getElementById('an-f').textContent=cs.filter(c=>c.level==='Full').length;
+  const pct=ds.length===0?100:Math.min(100,Math.max(0,Math.round((1-ds.length/(rs.length*5))*100)));
+  document.getElementById('an-p').textContent=pct+'%';
+  /* Chart 1 */
+  const cnt={};getBuses().slice(0,8).forEach(b=>cnt[b.n]=0);ds.forEach(r=>{if(cnt[r.bn]!==undefined)cnt[r.bn]++;});
+  const mx=Math.max(...Object.values(cnt),1);
+  document.getElementById('an-chart1').innerHTML=`<div class="bar-chart">${Object.entries(cnt).map(([bus,c])=>`<div class="bar-item"><div class="bar-fill" style="height:${Math.max(c/mx*130,4)}px;background:linear-gradient(180deg,var(--yellow),#d97706)" data-v="${c}"></div><div class="bar-lbl">${bus}</div></div>`).join('')}</div>`;
+  /* Chart 2 */
+  const tot=cs.length||1;const ec=cs.filter(x=>x.level==='Empty').length,mc=cs.filter(x=>x.level==='Moderate').length,fc=cs.filter(x=>x.level==='Full').length;
+  document.getElementById('an-chart2').innerHTML=`<div style="display:flex;flex-direction:column;gap:13px;margin-top:6px">${[['🟢 Empty',ec,'var(--green)'],['🟡 Moderate',mc,'var(--yellow)'],['🔴 Full',fc,'var(--red)']].map(([l,c,col])=>`<div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:0.83rem">${l}</span><span style="font-size:0.83rem;color:var(--t3)">${c} (${Math.round(c/tot*100)}%)</span></div><div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round(c/tot*100)}%;background:${col};border-radius:4px;transition:width 1s ease"></div></div></div>`).join('')}</div>`;
+  /* Peak hours */
+  const hr=['6AM','7AM','8AM','9AM','10AM','12PM','2PM','4PM','5PM','6PM','7PM','8PM'],sd=[2,7,13,11,6,4,5,9,15,12,7,3],mx2=Math.max(...sd);
+  document.getElementById('an-peak').innerHTML=`<div class="bar-chart" style="height:120px">${hr.map((h,i)=>`<div class="bar-item"><div class="bar-fill" style="height:${sd[i]/mx2*110}px;background:linear-gradient(180deg,var(--blue),#1d4ed8)" data-v="${sd[i]} reports"></div><div class="bar-lbl">${h}</div></div>`).join('')}</div><p style="color:var(--t3);font-size:0.73rem;margin-top:8px">📌 Peak: 8–9AM and 5–6PM (office hours)</p>`;
+  /* Routes table */
+  document.getElementById('an-routes').innerHTML=rs.map(r=>{const rd=ds.filter(d=>r.buses.includes(d.bn));const rc=cs.filter(c=>r.buses.includes(c.bn));const fc2=rc.filter(x=>x.level==='Full').length;const perf=rd.length===0?'<span class="badge b-g">Excellent</span>':rd.length<3?'<span class="badge b-y">Good</span>':'<span class="badge b-r">Needs Attention</span>';return `<tr><td style="font-weight:500">${r.from} → ${r.to}</td><td>${r.buses.map(b=>`<span class="chip" style="font-size:0.68rem;padding:2px 7px">${b}</span>`).join(' ')}</td><td>${rd.length}</td><td>${rc.length?fc2/rc.length>0.5?'🔴 Crowded':'🟡 Moderate':'No data'}</td><td>${perf}</td></tr>`;}).join('');
+}
+
+/* ===== DEMO DATA ===== */
+function genDemo(){
+  const buses=getBuses();const stops=['Ameerpet','JNTU','Koti','Kukatpally','Miyapur','Secunderabad','Gachibowli'];
+  const delays=['10','20','30+'],crowds=['Empty','Moderate','Full'];
+  let dd=getDelays(),cd=getCrowds();
+  for(let i=0;i<15;i++){const b=buses[Math.floor(Math.random()*buses.length)];dd.push({id:uid(),bn:b.n,delay:delays[Math.floor(Math.random()*3)],stop:stops[Math.floor(Math.random()*stops.length)],note:'Demo data',name:'Demo',ts:Date.now()-Math.random()*3.6e6});cd.push({id:uid(),bn:b.n,level:crowds[Math.floor(Math.random()*3)],stop:stops[Math.floor(Math.random()*stops.length)],name:'Demo',ts:Date.now()-Math.random()*3.6e6});}
+  saveDelays(dd);saveCrowds(cd);toast('success','Demo Data Added','15 sample reports generated');refreshDash();
+}
+
+/* Boot */
+showTab('dash');
+</script>
+</body>
+</html>

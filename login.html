@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Login — HyderabadTransit</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="tc" style="margin-bottom:28px">
+      <div class="logo-box" style="width:54px;height:54px;font-size:1.7rem;margin:0 auto 12px">🚌</div>
+      <h2 style="font-size:1.45rem">Your City. Your Bus. Your Control.</h2>
+      <p style="color:var(--t2);font-size:0.82rem;margin-top:4px">Smart City Bus Platform</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="atab on" id="tL" onclick="sw('login')">Login</button>
+      <button class="atab"     id="tS" onclick="sw('signup')">Sign Up</button>
+    </div>
+
+    <!-- Login -->
+    <div id="loginF">
+      <div class="fg"><label class="lbl">Email</label><input type="email" class="inp" id="lEmail" placeholder="you@email.com"/></div>
+      <div class="fg"><label class="lbl">Password</label><input type="password" class="inp" id="lPass" placeholder="Your password"/></div>
+      <button class="btn btn-p btn-full" onclick="doLogin()">Login →</button>
+      <div class="divider">Demo Credentials</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-s btn-sm" onclick="fill('user')">👤 Demo User</button>
+        <button class="btn btn-s btn-sm" onclick="fill('admin')">🛡️ Admin</button>
+      </div>
+    </div>
+
+    <!-- Signup -->
+    <div id="signupF" class="hidden">
+      <div class="fg"><label class="lbl">Full Name</label><input type="text" class="inp" id="sName" placeholder="Your name"/></div>
+      <div class="fg"><label class="lbl">Email</label><input type="email" class="inp" id="sEmail" placeholder="you@email.com"/></div>
+      <div class="fg"><label class="lbl">Password</label><input type="password" class="inp" id="sPass" placeholder="Min 6 characters"/></div>
+      <div class="fg"><label class="lbl">Confirm Password</label><input type="password" class="inp" id="sConf" placeholder="Repeat password"/></div>
+      <button class="btn btn-p btn-full" onclick="doSignup()">Create Account →</button>
+    </div>
+
+    <p class="tc" style="margin-top:18px;font-size:0.79rem;color:var(--t3)"><a href="index.html">← Back to Home</a></p>
+  </div>
+</div>
+
+<script>
+/* Shared helpers (inline for simplicity) */
+function gR(k,d=[]){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function sR(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getUsers(){return gR('users',[])} function saveUsers(v){sR('users',v)}
+function uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+let tw;
+function toast(type,title,msg=''){
+  if(!tw){tw=document.createElement('div');tw.className='toast-wrap';document.body.appendChild(tw);}
+  const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};
+  const el=document.createElement('div');el.className=`toast ${type}`;
+  el.innerHTML=`<span class="t-ico">${ico[type]}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;
+  tw.appendChild(el);setTimeout(()=>el.remove(),4000);
+}
+
+/* Init default users */
+if(!localStorage.getItem('users')){
+  saveUsers([
+    {id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},
+    {id:'user1', name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}
+  ]);
+}
+
+/* If already logged in */
+try{const u=JSON.parse(localStorage.getItem('curUser'));if(u)location.href='index.html';}catch{}
+
+function sw(tab){
+  document.getElementById('tL').classList.toggle('on',tab==='login');
+  document.getElementById('tS').classList.toggle('on',tab==='signup');
+  document.getElementById('loginF').classList.toggle('hidden',tab!=='login');
+  document.getElementById('signupF').classList.toggle('hidden',tab!=='signup');
+}
+function fill(t){
+  document.getElementById('lEmail').value=t==='admin'?'admin@transit.com':'demo@user.com';
+  document.getElementById('lPass').value= t==='admin'?'admin123':'demo123';
+}
+function doLogin(){
+  const email=document.getElementById('lEmail').value.trim();
+  const pass= document.getElementById('lPass').value;
+  if(!email||!pass){toast('warning','Fill all fields');return;}
+  const u=getUsers().find(x=>x.email===email&&x.pw===btoa(pass));
+  if(!u){toast('error','Invalid credentials','Wrong email or password');return;}
+  localStorage.setItem('curUser',JSON.stringify(u));
+  toast('success','Welcome back!','Redirecting...');
+  setTimeout(()=>location.href=u.role==='admin'?'admin.html':'index.html',900);
+}
+function doSignup(){
+  const name= document.getElementById('sName').value.trim();
+  const email=document.getElementById('sEmail').value.trim();
+  const pass= document.getElementById('sPass').value;
+  const conf= document.getElementById('sConf').value;
+  if(!name||!email||!pass){toast('warning','Fill all fields');return;}
+  if(pass!==conf){toast('error','Passwords do not match');return;}
+  if(pass.length<6){toast('warning','Password too short','Minimum 6 characters');return;}
+  const users=getUsers();
+  if(users.find(u=>u.email===email)){toast('error','Email already used');return;}
+  const u={id:uid(),name,email,pw:btoa(pass),role:'user'};
+  users.push(u);saveUsers(users);
+  localStorage.setItem('curUser',JSON.stringify(u));
+  toast('success','Account Created!','Welcome '+name+'!');
+  setTimeout(()=>location.href='index.html',900);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const lv=!document.getElementById('loginF').classList.contains('hidden');lv?doLogin():doSignup();}});
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Live Tracking — HyderabadTransport</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="logo"><div class="logo-box">🚌</div>Hyderabad<span>Transport</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li><li><a href="routes.html">Find Routes</a></li>
+      <li><a href="tracking.html" class="on">Live Track</a></li><li><a href="report.html">Report</a></li>
+      <li><a href="notifications.html">Alerts</a></li>
+    </ul>
+    <div class="nav-r" id="navR"></div>
+    <button class="ham" onclick="document.getElementById('navLinks').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="wrap" style="padding-bottom:60px">
+  <div class="page-hdr fu">
+    <h1>📍 <span class="grad-text">Live Bus Tracking</span></h1>
+    <p>Simulated real-time bus movement with ETA and stop-by-stop updates</p>
+  </div>
+
+  <!-- Selector -->
+  <div class="card fu" style="margin-bottom:22px">
+    <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
+      <div class="fg" style="margin:0;flex:1;min-width:200px">
+        <label class="lbl">Select Bus to Track</label>
+        <select class="inp" id="busSel" onchange="loadBus()"><option value="">Choose a bus number...</option></select>
+      </div>
+      <button class="btn btn-p" onclick="startTracking()">🔴 Start Tracking</button>
+      <button class="btn btn-s" onclick="stopTracking()">⏹ Stop</button>
+    </div>
+  </div>
+
+  <!-- Tracking Panel -->
+  <div id="panel" class="hidden">
+    <div class="track-box fu">
+      <div class="track-head">
+        <div style="display:flex;align-items:center;gap:11px">
+          <span class="live-dot"></span>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700" id="tBusName">Bus —</div>
+            <div style="color:var(--t2);font-size:0.78rem" id="tRouteName">—</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:9px">
+          <span class="badge b-g">🟢 Live</span>
+          <span class="badge b-b" id="tTime">--:--</span>
+        </div>
+      </div>
+
+      <div style="padding:28px 22px">
+        <div style="display:flex;justify-content:space-between;font-size:0.73rem;color:var(--t3);margin-bottom:6px">
+          <span id="tFrom">—</span><span id="tTo">—</span>
+        </div>
+
+        <div class="route-line">
+          <div class="route-prog" id="rProg" style="width:0%"></div>
+          <div class="bus-dot" id="busDot" style="left:0%">🚌</div>
+        </div>
+
+        <div class="route-pts" id="rPts"></div>
+
+        <div class="eta-row">
+          <div class="eta-c"><div class="eta-v" id="etaN">—</div><div class="eta-l">ETA Next Stop</div></div>
+          <div class="eta-c"><div class="eta-v" id="etaD">—</div><div class="eta-l">ETA Destination</div></div>
+          <div class="eta-c"><div class="eta-v" id="etaDist">—</div><div class="eta-l">Distance Left</div></div>
+        </div>
+
+        <div style="margin-top:20px;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div><div class="lbl" style="margin-bottom:4px">Current Stop</div><div style="font-weight:600" id="curStop">—</div></div>
+            <div><div class="lbl" style="margin-bottom:4px">Next Stop</div><div style="font-weight:600;color:var(--accent)" id="nxtStop">—</div></div>
+            <div><div class="lbl" style="margin-bottom:4px">Speed</div><div style="font-weight:600" id="speed">— km/h</div></div>
+            <div><div class="lbl" style="margin-bottom:4px">Passengers</div><div style="font-weight:600" id="pax">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:20px">
+      <div class="card">
+        <h3 style="margin-bottom:14px">📊 Today's Bus Stats</h3>
+        <div id="busStats"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:14px">🔔 Live Alerts</h3>
+        <div id="alerts">
+          <div class="ni"><div class="ni-ico ar">🚌</div><div><div class="ni-ttl">Tracking Active</div><div class="ni-sub">Location updates every 3 seconds</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Default state -->
+  <div id="defState" class="card tc" style="padding:52px">
+    <div style="font-size:3.5rem;margin-bottom:14px">📍</div>
+    <h3 style="margin-bottom:7px">Select a Bus to Track</h3>
+    <p style="color:var(--t2)">Choose a bus from the dropdown and click Start Tracking</p>
+  </div>
+</div>
+
+<footer><p>🚌 HyderabadTransit — Live tracking is simulated for demo</p></footer>
+
+<script>
+const ROUTES=[
+  {id:"R01",from:"Mallampet",to:"Nizampet",     buses:["224","195","10H"],   stops:["Mallampet","Bachupally X Roads","Nizampet X Roads","Nizampet"],distance:"8"},
+  {id:"R02",from:"Kukatpally",to:"Ameerpet",    buses:["127K","10K"],        stops:["Kukatpally","KPHB Colony","Balanagar","Ameerpet"],distance:"12"},
+  {id:"R03",from:"Miyapur",to:"LB Nagar",       buses:["218","277"],         stops:["Miyapur","JNTU","Kukatpally","Ameerpet","Nampally","Koti","LB Nagar"],distance:"35"},
+  {id:"R04",from:"Bachupally",to:"Koti",        buses:["224M","195"],        stops:["Bachupally","Mallampet","Nizampet","JNTU","Kukatpally","Ameerpet","Koti"],distance:"28"},
+  {id:"R05",from:"JNTU",to:"Secunderabad",      buses:["10H","187"],         stops:["JNTU","Kukatpally","Balanagar","Sanathnagar","Erragadda","Secunderabad"],distance:"20"},
+  {id:"R06",from:"Gachibowli",to:"Uppal",       buses:["216","49M"],         stops:["Gachibowli","Hitech City","Madhapur","Punjagutta","Ameerpet","Uppal"],distance:"22"},
+  {id:"R07",from:"Lingampally",to:"Koti",       buses:["116","115"],         stops:["Lingampally","Miyapur","JNTU","Kukatpally","Ameerpet","Koti"],distance:"30"},
+  {id:"R08",from:"Hitech City",to:"Secunderabad",buses:["127K","5K","10H"],  stops:["Hitech City","Madhapur","Ameerpet","Lakdikapul","Secunderabad"],distance:"16"},
+  {id:"R09",from:"Ameerpet",to:"Koti",          buses:["2K","5K","49"],      stops:["Ameerpet","Nampally","Abids","Koti"],distance:"7"},
+  {id:"R10",from:"Dilsukhnagar",to:"Mehdipatnam",buses:["216M","102"],       stops:["Dilsukhnagar","LB Nagar","Uppal","Ameerpet","Mehdipatnam"],distance:"24"}
+];
+const BUSES=[
+  {number:"224",route:"Mallampet → Koti",type:"AC",cap:60},{number:"195",route:"Bachupally → Koti",type:"Non-AC",cap:60},
+  {number:"10H",route:"JNTU → Secunderabad",type:"AC",cap:80},{number:"127K",route:"Kukatpally → Secunderabad",type:"Non-AC",cap:60},
+  {number:"10K",route:"Kukatpally → Ameerpet",type:"Non-AC",cap:60},{number:"218",route:"Miyapur → LB Nagar",type:"AC",cap:80},
+  {number:"277",route:"Miyapur → LB Nagar",type:"Non-AC",cap:80},{number:"224M",route:"Bachupally → Koti",type:"Non-AC",cap:60},
+  {number:"187",route:"JNTU → Secunderabad",type:"Non-AC",cap:60},{number:"216",route:"Gachibowli → Uppal",type:"AC",cap:80},
+  {number:"49M",route:"Gachibowli → Uppal",type:"Non-AC",cap:60},{number:"116",route:"Lingampally → Koti",type:"Non-AC",cap:60},
+  {number:"115",route:"Lingampally → Koti",type:"Non-AC",cap:60}
+];
+function gR(k,d=[]){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function getDelays(){return gR('delays',[])} function getCurUser(){try{return JSON.parse(localStorage.getItem('curUser'))}catch{return null}}
+if(!localStorage.getItem('users'))localStorage.setItem('users',JSON.stringify([{id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},{id:'user1',name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}]));
+
+let tw;function toast(type,title,msg=''){if(!tw){tw=document.createElement('div');tw.className='toast-wrap';document.body.appendChild(tw);}const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span class="t-ico">${ico[type]}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;tw.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+function setupNav(){const u=getCurUser();const r=document.getElementById('navR');if(!r)return;r.innerHTML=u?`<div style="display:flex;align-items:center;gap:8px"><div class="ava">${u.name[0]}</div><span style="font-size:0.87rem;color:var(--t2)">${u.name}</span></div><button class="btn btn-s btn-sm" onclick="localStorage.removeItem('curUser');location.href='index.html'">Logout</button>`:`<a href="login.html" class="btn btn-p btn-sm">Login</a>`;}
+setupNav();
+
+/* Fill bus dropdown */
+const busSel=document.getElementById('busSel');
+BUSES.forEach(b=>{const o=document.createElement('option');o.value=b.number;o.textContent=`Bus ${b.number} — ${b.route}`;busSel.appendChild(o);});
+
+/* Prefill from URL */
+const params=new URLSearchParams(location.search);
+if(params.get('bus')){busSel.value=params.get('bus');loadBus();startTracking();}
+if(params.get('route')){const r=ROUTES.find(x=>x.id===params.get('route'));if(r){busSel.value=r.buses[0];loadBus();startTracking();}}
+
+let iv=null,prog=0,curIdx=0,curBus=null,curRoute=null;
+
+function loadBus(){
+  const bn=busSel.value;if(!bn)return;
+  curBus=BUSES.find(b=>b.number===bn);
+  curRoute=ROUTES.find(r=>r.buses.includes(bn));
+  prog=Math.random()*25; curIdx=0;
+  document.getElementById('tBusName').textContent=`Bus ${bn}`;
+  document.getElementById('tRouteName').textContent=curRoute?`${curRoute.from} → ${curRoute.to}`:(curBus?curBus.route:'');
+  document.getElementById('tFrom').textContent=curRoute?curRoute.from:'—';
+  document.getElementById('tTo').textContent  =curRoute?curRoute.to:'—';
+  const drs=getDelays().filter(r=>r.bn===bn);
+  document.getElementById('busStats').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${[['Total trips today',Math.floor(Math.random()*8+5)],['Delay reports',drs.length],['Avg speed',Math.floor(Math.random()*15+22)+' km/h'],['Capacity',curBus?curBus.cap+' seats':'60 seats']].map(([l,v])=>`
+      <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,0.03);border-radius:7px">
+        <span style="color:var(--t2);font-size:0.85rem">${l}</span><strong style="font-size:0.88rem">${v}</strong>
+      </div>`).join('')}
+    </div>`;
+  renderPts();
+}
+
+function renderPts(){
+  if(!curRoute)return;
+  const stops=curRoute.stops;
+  document.getElementById('rPts').innerHTML=stops.map((s,i)=>{
+    const pct=Math.round(i/(stops.length-1)*100);
+    const cls=prog>=pct?(i===Math.floor(prog/(100/(stops.length-1)))?'curr':'done'):'';
+    return `<div class="rpt ${cls}" title="${s}"><div class="rpt-dot"></div><span style="max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.68rem">${s}</span></div>`;
+  }).join('');
+}
+
+function tick(){
+  if(!curRoute)return;
+  const stops=curRoute.stops;
+  prog=Math.min(prog+(Math.random()*1.4+0.5),100);
+  curIdx=Math.min(Math.floor(prog/(100/(stops.length-1))),stops.length-1);
+  const nextIdx=Math.min(curIdx+1,stops.length-1);
+  document.getElementById('rProg').style.width=prog+'%';
+  document.getElementById('busDot').style.left=prog+'%';
+  const stopsLeft=stops.length-1-curIdx;
+  document.getElementById('etaN').textContent=stopsLeft>0?Math.max(1,Math.ceil((1-(prog%(100/(stops.length-1)))/(100/(stops.length-1)))*7))+'min':'Here';
+  document.getElementById('etaD').textContent=stopsLeft>0?stopsLeft*7+' min':'Arrived';
+  document.getElementById('etaDist').textContent=(parseFloat(curRoute.distance)*(1-prog/100)).toFixed(1)+' km';
+  document.getElementById('curStop').textContent=stops[curIdx];
+  document.getElementById('nxtStop').textContent=stops[nextIdx];
+  document.getElementById('speed').textContent=Math.floor(Math.random()*15+25)+' km/h';
+  document.getElementById('pax').textContent=Math.floor(Math.random()*35+10)+' / '+(curBus?curBus.cap:60);
+  document.getElementById('tTime').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  renderPts();
+  if(prog>=100){stopTracking();toast('success','Bus Arrived!','Reached '+stops[stops.length-1]);addAlert('🎉 Bus has arrived at destination.');}
+  else if(Math.random()<0.05){const msgs=['Heavy traffic ahead','Slight delay expected','Bus running 5 min late'];addAlert('⚠️ '+msgs[Math.floor(Math.random()*3)]);}
+}
+
+function addAlert(msg){
+  const c=document.getElementById('alerts');
+  const el=document.createElement('div');el.className='ni';
+  el.innerHTML=`<div class="ni-ico dl">⚡</div><div><div class="ni-ttl">${msg}</div><div class="ni-time">Just now</div></div>`;
+  c.insertBefore(el,c.firstChild);if(c.children.length>5)c.lastChild.remove();
+}
+
+function startTracking(){
+  if(!busSel.value){toast('warning','Select a bus');return;}
+  if(!curBus)loadBus();
+  stopTracking();
+  document.getElementById('panel').classList.remove('hidden');
+  document.getElementById('defState').classList.add('hidden');
+  iv=setInterval(tick,3000);tick();
+  toast('info','Tracking Started',`Watching Bus ${busSel.value}`);
+}
+function stopTracking(){if(iv){clearInterval(iv);iv=null;}}
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Notifications — HyderabadTransport</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="logo"><div class="logo-box">🚌</div>Hyderabad<span>Transport</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li><li><a href="routes.html">Find Routes</a></li>
+      <li><a href="tracking.html">Live Track</a></li><li><a href="report.html">Report</a></li>
+      <li><a href="notifications.html" class="on">Alerts</a></li>
+    </ul>
+    <div class="nav-r" id="navR"></div>
+    <button class="ham" onclick="document.getElementById('navLinks').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="wrap" style="padding-bottom:60px">
+  <div class="page-hdr fu">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+      <div><h1>🔔 <span class="grad-text">Alerts & Notifications</span></h1><p>Stay updated on buses, delays, and crowding</p></div>
+      <button class="btn btn-s" onclick="markAll()">✓ Mark All Read</button>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:7px;margin-bottom:22px;flex-wrap:wrap">
+    <button class="btn btn-p btn-sm" onclick="filter('all',this)">All</button>
+    <button class="btn btn-s btn-sm" onclick="filter('arrival',this)">🚌 Arrivals</button>
+    <button class="btn btn-s btn-sm" onclick="filter('delay',this)">⚠️ Delays</button>
+    <button class="btn btn-s btn-sm" onclick="filter('crowd',this)">👥 Crowd</button>
+  </div>
+
+  <div class="card fu" id="nList"></div>
+
+  <!-- Prefs -->
+  <div class="card fu" style="margin-top:22px;animation-delay:.15s">
+    <h3 style="margin-bottom:14px">⚙️ Notification Preferences</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${[['🚌 Bus Arrival Alerts','Notify 3 min before arrival','p_arr'],['⚠️ Delay Alerts','On community delay reports','p_del'],['👥 Heavy Crowd Warnings','When bus is reported full','p_cro']].map(([t,d,id])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:13px;background:rgba(255,255,255,0.03);border-radius:8px">
+        <div><div style="font-weight:600;font-size:0.88rem">${t}</div><div style="color:var(--t3);font-size:0.78rem">${d}</div></div>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:7px">
+          <input type="checkbox" id="${id}" checked style="accent-color:var(--accent);width:17px;height:17px"/>
+          <span style="font-size:0.83rem;color:var(--t2)">On</span>
+        </label>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-p" style="margin-top:14px" onclick="toast('success','Saved','Notification preferences updated')">Save Preferences</button>
+  </div>
+</div>
+
+<footer><p>🚌 HyderabadTransit — Smart alerts</p></footer>
+
+<script>
+function gR(k,d=[]){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function sR(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getNotifs(){return gR('notifs',[])} function saveNotifs(v){sR('notifs',v)}
+function getCurUser(){try{return JSON.parse(localStorage.getItem('curUser'))}catch{return null}}
+if(!localStorage.getItem('users'))sR('users',[{id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},{id:'user1',name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}]);
+if(!localStorage.getItem('notifs'))saveNotifs([{id:'n1',type:'arrival',title:'Bus 10H Arriving Soon',desc:'Bus 10H reaches JNTU in ~3 mins',time:'2 min ago',read:false},{id:'n2',type:'delay',title:'Delay Alert — Bus 218',desc:'Bus 218 delayed by 20 min on Miyapur-LB Nagar',time:'8 min ago',read:false},{id:'n3',type:'crowd',title:'Heavy Crowd — Bus 127K',desc:'Bus 127K is fully packed. Next in 12 min.',time:'15 min ago',read:true}]);
+
+let tw;function toast(type,title,msg=''){if(!tw){tw=document.createElement('div');tw.className='toast-wrap';document.body.appendChild(tw);}const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span class="t-ico">${ico[type]}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;tw.appendChild(el);setTimeout(()=>el.remove(),4000);}
+function setupNav(){const u=getCurUser();const r=document.getElementById('navR');if(!r)return;r.innerHTML=u?`<div style="display:flex;align-items:center;gap:8px"><div class="ava">${u.name[0]}</div><span style="font-size:0.87rem;color:var(--t2)">${u.name}</span></div><button class="btn btn-s btn-sm" onclick="localStorage.removeItem('curUser');location.href='index.html'">Logout</button>`:`<a href="login.html" class="btn btn-p btn-sm">Login</a>`;}
+setupNav();
+
+let curFilter='all';
+function filter(f,btn){curFilter=f;document.querySelectorAll('[onclick^="filter"]').forEach(b=>b.className='btn btn-s btn-sm');btn.className='btn btn-p btn-sm';render();}
+
+function render(){
+  let ns=getNotifs();
+  if(curFilter!=='all')ns=ns.filter(n=>n.type===curFilter);
+  const ico={arrival:{i:'🚌',c:'ar'},delay:{i:'⚠️',c:'dl'},crowd:{i:'👥',c:'cr'}};
+  document.getElementById('nList').innerHTML=ns.length?ns.map(n=>{const m=ico[n.type]||{i:'🔔',c:'ar'};return `
+    <div class="ni ${n.read?'':'unread'}" style="${!n.read?'background:rgba(249,115,22,0.04);border-radius:8px;padding:12px;margin-bottom:4px':''}" onclick="markOne('${n.id}')">
+      <div class="ni-ico ${m.c}">${m.i}</div>
+      <div style="flex:1">
+        <div class="ni-ttl" style="${!n.read?'color:var(--t1)':''}">${n.title}</div>
+        <div class="ni-sub">${n.desc}</div>
+        <div class="ni-time">${n.time}</div>
+      </div>
+      ${!n.read?'<span style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:8px"></span>':''}
+    </div>`;}).join(''):`<div style="text-align:center;padding:36px"><div style="font-size:2.8rem;margin-bottom:10px">🔕</div><h3>No notifications</h3><p style="color:var(--t2);margin-top:6px">All caught up!</p></div>`;
+}
+
+function markOne(id){const ns=getNotifs();const n=ns.find(x=>x.id===id);if(n){n.read=true;saveNotifs(ns);render();}}
+function markAll(){const ns=getNotifs().map(n=>({...n,read:true}));saveNotifs(ns);render();toast('success','All read','Notifications cleared');}
+
+render();
+
+/* Auto-generate a sample arrival notif after 5s */
+setTimeout(()=>{
+  const buses=['224','10H','127K','218'];
+  const bn=buses[Math.floor(Math.random()*buses.length)];
+  const ns=getNotifs();
+  ns.unshift({id:'auto_'+Date.now(),type:'arrival',title:`Bus ${bn} Arriving Soon`,desc:`Bus ${bn} arrives at your stop in ~3 minutes`,time:'Just now',read:false});
+  saveNotifs(ns);render();toast('info','🚌 Bus Arriving!',`Bus ${bn} is ~3 mins away`);
+},5000);
+</script>
+</body>
+</html>

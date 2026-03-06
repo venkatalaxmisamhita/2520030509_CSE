@@ -1,0 +1,230 @@
+//BUS DELAY AND CROWD REPORTING NETWORK
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>HyderabadTransport — Home</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="logo"><div class="logo-box">🚌</div>Hyderabad<span>Transport</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="on">Home</a></li>
+      <li><a href="routes.html">Find Routes</a></li>
+      <li><a href="tracking.html">Live Track</a></li>
+      <li><a href="report.html">Report</a></li>
+      <li><a href="notifications.html">Alerts <span id="nb" style="display:none;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:0.62rem;align-items:center;justify-content:center;font-weight:700;margin-left:2px;"></span></a></li>
+    </ul>
+    <div class="nav-r" id="navR"></div>
+    <button class="ham" id="ham" onclick="document.getElementById('navLinks').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-content" style="max-width:580px">
+      <div class="hero-badge fu">🏙️ Hyderabad City Bus Network</div>
+      <h1 class="fu d1">Your City. Your Bus. Your Control.<br><span class="grad-text">Made Simple</span></h1>
+      <p class="fu d2">Find the best bus routes, track delays in real-time, and report crowding — all powered by the community.</p>
+      <div class="hero-btns fu d3">
+        <a href="routes.html" class="btn btn-p btn-lg">🔍 Find My Route</a>
+        <a href="tracking.html" class="btn btn-s btn-lg">📍 Live Track</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUICK SEARCH ===== -->
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <div class="search-box fu">
+      <h2 style="margin-bottom:6px;font-size:1.3rem">Quick Route Search</h2>
+      <p style="color:var(--t2);font-size:0.87rem;margin-bottom:22px">Select your start and destination to find the best bus</p>
+      <div class="search-row">
+        <div class="fg" style="margin:0">
+          <label class="lbl">From</label>
+          <select class="inp" id="fromS"><option value="">Select Starting Point</option></select>
+        </div>
+        <div class="fg" style="margin:0">
+          <label class="lbl">To</label>
+          <select class="inp" id="toS"><option value="">Select Destination</option></select>
+        </div>
+        <button class="btn btn-p" onclick="qSearch()" style="align-self:flex-end">Search 🔍</button>
+      </div>
+      <div id="qRes" style="margin-top:20px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="sec">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:36px">
+      <h2 style="font-size:1.7rem;margin-bottom:7px">Everything You Need</h2>
+      <p style="color:var(--t2)">Comprehensive tools for smarter commuting in Hyderabad</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat fu">   <div class="feat-ico">🗺️</div><h3>Smart Route Finder</h3><p>Find bus routes between any two Hyderabad stops with real timetable data.</p></div>
+      <div class="feat fu d1"><div class="feat-ico">📍</div><h3>Live Bus Tracking</h3><p>Watch your bus move in real-time with an animated tracker and ETA updates.</p></div>
+      <div class="feat fu d2"><div class="feat-ico">⚡</div><h3>Delay Reporting</h3><p>Report bus delays and see crowd-sourced data before you leave home.</p></div>
+      <div class="feat fu d3"><div class="feat-ico">👥</div><h3>Crowd Status</h3><p>Know how crowded your bus is before boarding — Empty, Moderate, or Full.</p></div>
+      <div class="feat fu">   <div class="feat-ico">🔔</div><h3>Smart Alerts</h3><p>Get notified about arrivals, delays, and overcrowding automatically.</p></div>
+      <div class="feat fu d1"><div class="feat-ico">📊</div><h3>Analytics</h3><p>View delay trends, peak hours, and route performance across Hyderabad.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LIVE STATUS ===== -->
+<section class="sec" style="padding-top:0">
+  <div class="wrap">
+    <h2 style="margin-bottom:20px;font-size:1.4rem">🟢 Live Bus Status</h2>
+    <div id="liveGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px"></div>
+  </div>
+</section>
+
+<footer><p>🚌 HyderabadTransport — BTech Project | All data is simulated for demo</p></footer>
+
+<script>
+/* ==================== SHARED DATA ==================== */
+const ROUTES = [
+  {id:"R01",from:"Mallampet",to:"Nizampet",     buses:["224","195","10H"],   stops:["Mallampet","Bachupally X Roads","Nizampet X Roads","Nizampet"],duration:"25 min",distance:"8 km", firstBus:"5:30 AM",lastBus:"10:30 PM",avgDelay:8},
+  {id:"R02",from:"Kukatpally",to:"Ameerpet",    buses:["127K","10K"],        stops:["Kukatpally Housing Board","KPHB Colony","Balanagar","Ameerpet"],duration:"35 min",distance:"12 km",firstBus:"5:00 AM",lastBus:"11:00 PM",avgDelay:12},
+  {id:"R03",from:"Miyapur",to:"LB Nagar",       buses:["218","277"],         stops:["Miyapur","JNTU","Kukatpally","Ameerpet","Nampally","Koti","LB Nagar"],duration:"90 min",distance:"35 km",firstBus:"5:15 AM",lastBus:"10:45 PM",avgDelay:20},
+  {id:"R04",from:"Bachupally",to:"Koti",        buses:["224M","195"],        stops:["Bachupally","Mallampet","Nizampet","JNTU","Kukatpally","Ameerpet","Koti"],duration:"75 min",distance:"28 km",firstBus:"5:30 AM",lastBus:"10:30 PM",avgDelay:15},
+  {id:"R05",from:"JNTU",to:"Secunderabad",      buses:["10H","187"],         stops:["JNTU","Kukatpally","Balanagar","Sanathnagar","Erragadda","Secunderabad"],duration:"55 min",distance:"20 km",firstBus:"5:45 AM",lastBus:"11:15 PM",avgDelay:10},
+  {id:"R06",from:"Gachibowli",to:"Uppal",       buses:["216","49M"],         stops:["Gachibowli","Hitech City","Madhapur","Punjagutta","Ameerpet","Uppal"],duration:"60 min",distance:"22 km",firstBus:"6:00 AM",lastBus:"10:00 PM",avgDelay:18},
+  {id:"R07",from:"Lingampally",to:"Koti",       buses:["116","115"],         stops:["Lingampally","Miyapur","JNTU","Kukatpally","Ameerpet","Koti"],duration:"80 min",distance:"30 km",firstBus:"5:30 AM",lastBus:"10:00 PM",avgDelay:22},
+  {id:"R08",from:"Hitech City",to:"Secunderabad",buses:["127K","5K","10H"],  stops:["Hitech City","Madhapur","Ameerpet","Lakdikapul","Secunderabad"],duration:"45 min",distance:"16 km",firstBus:"5:00 AM",lastBus:"11:30 PM",avgDelay:14},
+  {id:"R09",from:"Ameerpet",to:"Koti",          buses:["2K","5K","49"],      stops:["Ameerpet","Nampally","Abids","Koti"],duration:"25 min",distance:"7 km",firstBus:"5:00 AM",lastBus:"11:45 PM",avgDelay:7},
+  {id:"R10",from:"Dilsukhnagar",to:"Mehdipatnam",buses:["216M","102"],       stops:["Dilsukhnagar","LB Nagar","Uppal","Ameerpet","Mehdipatnam"],duration:"65 min",distance:"24 km",firstBus:"6:00 AM",lastBus:"10:30 PM",avgDelay:19}
+];
+const BUSES = [
+  {id:"B01",number:"224",  route:"Mallampet → Koti",           type:"AC",    cap:60},
+  {id:"B02",number:"195",  route:"Bachupally → Koti",          type:"Non-AC",cap:60},
+  {id:"B03",number:"10H",  route:"JNTU → Secunderabad",        type:"AC",    cap:80},
+  {id:"B04",number:"127K", route:"Kukatpally → Secunderabad",  type:"Non-AC",cap:60},
+  {id:"B05",number:"10K",  route:"Kukatpally → Ameerpet",      type:"Non-AC",cap:60},
+  {id:"B06",number:"218",  route:"Miyapur → LB Nagar",         type:"AC",    cap:80},
+  {id:"B07",number:"277",  route:"Miyapur → LB Nagar",         type:"Non-AC",cap:80},
+  {id:"B08",number:"224M", route:"Bachupally → Koti",          type:"Non-AC",cap:60},
+  {id:"B09",number:"187",  route:"JNTU → Secunderabad",        type:"Non-AC",cap:60},
+  {id:"B10",number:"216",  route:"Gachibowli → Uppal",         type:"AC",    cap:80},
+  {id:"B11",number:"49M",  route:"Gachibowli → Uppal",         type:"Non-AC",cap:60},
+  {id:"B12",number:"116",  route:"Lingampally → Koti",         type:"Non-AC",cap:60},
+  {id:"B13",number:"115",  route:"Lingampally → Koti",         type:"Non-AC",cap:60}
+];
+const STOPS = [...new Set(ROUTES.flatMap(r=>r.stops))].sort();
+
+/* ==================== LOCALSTORAGE HELPERS ==================== */
+function gR(k,d=[]){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function sR(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getRoutes(){return gR('routes',ROUTES)}
+function getBuses() {return gR('buses',BUSES)}
+function getUsers() {return gR('users',[])}
+function getDelays(){return gR('delays',[])}
+function getCrowds(){return gR('crowds',[])}
+function getNotifs(){return gR('notifs',[])}
+function saveRoutes(v){sR('routes',v)} function saveBuses(v){sR('buses',v)}
+function saveUsers(v) {sR('users',v)}  function saveDelays(v){sR('delays',v)}
+function saveCrowds(v){sR('crowds',v)} function saveNotifs(v){sR('notifs',v)}
+function uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+function timeAgo(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return 'Just now';if(m<60)return m+' min ago';const h=Math.floor(m/60);if(h<24)return h+' hr ago';return Math.floor(h/24)+' days ago';}
+function getCurUser(){try{return JSON.parse(localStorage.getItem('curUser'))}catch{return null}}
+function getLatestCrowd(bn){const r=getCrowds().filter(x=>x.bn===bn).sort((a,b)=>b.ts-a.ts);return r.length?r[0].level:null}
+function getLatestDelay(bn){const r=getDelays().filter(x=>x.bn===bn).sort((a,b)=>b.ts-a.ts);return r.length?r[0].delay:null}
+function crowdBadge(l){if(!l)return '<span class="badge b-b">No data</span>';if(l==='Empty')return '<span class="badge b-g">🟢 Empty</span>';if(l==='Moderate')return '<span class="badge b-y">🟡 Moderate</span>';return '<span class="badge b-r">🔴 Full</span>';}
+
+/* Init default data if empty */
+(function initData(){
+  if(!localStorage.getItem('users')){
+    saveUsers([
+      {id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},
+      {id:'user1', name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}
+    ]);
+  }
+  if(!localStorage.getItem('notifs')){
+    saveNotifs([
+      {id:'n1',type:'arrival',title:'Bus 10H Arriving Soon',desc:'Bus 10H reaches JNTU in ~3 mins',time:'2 min ago',read:false},
+      {id:'n2',type:'delay',  title:'Delay Alert — Bus 218', desc:'Bus 218 delayed by 20 min on Miyapur-LB Nagar',time:'8 min ago',read:false},
+      {id:'n3',type:'crowd',  title:'Heavy Crowd — Bus 127K',desc:'Bus 127K is fully crowded. Next in 12 min.',time:'15 min ago',read:true}
+    ]);
+  }
+})();
+
+/* ==================== TOAST ==================== */
+function toast(type,title,msg='',ms=4000){
+  let w=document.getElementById('tw');
+  if(!w){w=document.createElement('div');w.id='tw';w.className='toast-wrap';document.body.appendChild(w);}
+  const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span class="t-ico">${ico[type]||'ℹ️'}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;
+  w.appendChild(el);
+  setTimeout(()=>{el.style.animation='tOut .35s ease forwards';setTimeout(()=>el.remove(),350)},ms);
+}
+
+/* ==================== NAVBAR ==================== */
+function setupNav(){
+  const u=getCurUser();
+  const r=document.getElementById('navR');
+  if(!r)return;
+  r.innerHTML=u?`
+    <div class="flex-c gap1"><div class="ava">${u.name[0]}</div><span style="font-size:0.87rem;color:var(--t2)">${u.name}</span></div>
+    <button class="btn btn-s btn-sm" onclick="logout()">Logout</button>
+    ${u.role==='admin'?'<a href="admin.html" class="btn btn-p btn-sm">🛡 Admin</a>':''}
+  `:
+  `<a href="login.html" class="btn btn-p btn-sm">Login</a>`;
+
+  /* notif badge */
+  const nb=document.getElementById('nb');
+  if(nb){const un=getNotifs().filter(n=>!n.read).length;if(un>0){nb.style.display='inline-flex';nb.textContent=un;}}
+}
+function logout(){localStorage.removeItem('curUser');location.href='index.html';}
+
+/* ==================== PAGE LOGIC ==================== */
+/* Populate stop dropdowns */
+function fillStops(...ids){ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;STOPS.forEach(s=>{const o=document.createElement('option');o.value=o.textContent=s;el.appendChild(o);});});}
+
+function qSearch(){
+  const from=document.getElementById('fromS').value;
+  const to=document.getElementById('toS').value;
+  if(!from||!to){toast('warning','Select both stops');return;}
+  if(from===to){toast('error','Same stop selected','Start and destination must be different');return;}
+  location.href=`routes.html?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+}
+
+/* Live status grid */
+function renderLiveGrid(){
+  const g=document.getElementById('liveGrid');if(!g)return;
+  g.innerHTML=getBuses().slice(0,6).map(b=>{
+    const crowd=getLatestCrowd(b.number);
+    const delay=getLatestDelay(b.number);
+    const st=delay?(+delay>=30?'Delayed':'Slight Delay'):'On Time';
+    const sc=st==='On Time'?'b-g':st==='Slight Delay'?'b-y':'b-r';
+    return `<div class="route-card" onclick="location.href='routes.html?bus=${b.number}'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span class="chip">${b.number}</span><span class="badge ${sc}">${st}</span>
+      </div>
+      <div style="color:var(--t2);font-size:0.83rem;margin-bottom:8px">${b.route}</div>
+      <div style="display:flex;gap:10px;font-size:0.78rem;color:var(--t3)">
+        <span>${b.type}</span>${crowd?`<span>Crowd: ${crowd}</span>`:''}${delay?`<span>⏱ +${delay}m</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* Boot */
+fillStops('fromS','toS');
+setupNav();
+renderLiveGrid();
+</script>
+</body>
+</html>

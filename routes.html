@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Find Routes — HyderabadTransit</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a href="index.html" class="logo"><div class="logo-box">🚌</div>Hyderabad<span>Transport</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="routes.html" class="on">Find Routes</a></li>
+      <li><a href="tracking.html">Live Track</a></li>
+      <li><a href="report.html">Report</a></li>
+      <li><a href="notifications.html">Alerts</a></li>
+    </ul>
+    <div class="nav-r" id="navR"></div>
+    <button class="ham" onclick="document.getElementById('navLinks').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="page-hdr fu">
+    <h1>🗺️ <span class="grad-text">Route Finder</span></h1>
+    <p>Select start and destination to discover Hyderabad bus routes</p>
+  </div>
+
+  <div class="search-box fu">
+    <div class="search-row">
+      <div class="fg" style="margin:0"><label class="lbl">From</label><select class="inp" id="fromS"><option value="">Select Starting Point</option></select></div>
+      <div class="fg" style="margin:0"><label class="lbl">To</label><select class="inp" id="toS"><option value="">Select Destination</option></select></div>
+      <button class="btn btn-p" onclick="doSearch()" style="align-self:flex-end">Find 🔍</button>
+    </div>
+  </div>
+
+  <div id="results" style="margin-top:28px"></div>
+
+  <div style="margin-top:44px">
+    <h2 style="margin-bottom:18px;font-size:1.35rem">All Available Routes</h2>
+    <div id="allRoutes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px"></div>
+  </div>
+</div>
+
+<footer><p>🚌 HyderabadTransport — Real Hyderabad routes (simulated)</p></footer>
+
+<script>
+/* ===== SHARED DATA & HELPERS ===== */
+const ROUTES=[
+  {id:"R01",from:"Mallampet",to:"Nizampet",     buses:["224","195","10H"],   stops:["Mallampet","Bachupally X Roads","Nizampet X Roads","Nizampet"],duration:"25 min",distance:"8 km", firstBus:"5:30 AM",lastBus:"10:30 PM"},
+  {id:"R02",from:"Kukatpally",to:"Ameerpet",    buses:["127K","10K"],        stops:["Kukatpally Housing Board","KPHB Colony","Balanagar","Ameerpet"],duration:"35 min",distance:"12 km",firstBus:"5:00 AM",lastBus:"11:00 PM"},
+  {id:"R03",from:"Miyapur",to:"LB Nagar",       buses:["218","277"],         stops:["Miyapur","JNTU","Kukatpally","Ameerpet","Nampally","Koti","LB Nagar"],duration:"90 min",distance:"35 km",firstBus:"5:15 AM",lastBus:"10:45 PM"},
+  {id:"R04",from:"Bachupally",to:"Koti",        buses:["224M","195"],        stops:["Bachupally","Mallampet","Nizampet","JNTU","Kukatpally","Ameerpet","Koti"],duration:"75 min",distance:"28 km",firstBus:"5:30 AM",lastBus:"10:30 PM"},
+  {id:"R05",from:"JNTU",to:"Secunderabad",      buses:["10H","187"],         stops:["JNTU","Kukatpally","Balanagar","Sanathnagar","Erragadda","Secunderabad"],duration:"55 min",distance:"20 km",firstBus:"5:45 AM",lastBus:"11:15 PM"},
+  {id:"R06",from:"Gachibowli",to:"Uppal",       buses:["216","49M"],         stops:["Gachibowli","Hitech City","Madhapur","Punjagutta","Ameerpet","Uppal"],duration:"60 min",distance:"22 km",firstBus:"6:00 AM",lastBus:"10:00 PM"},
+  {id:"R07",from:"Lingampally",to:"Koti",       buses:["116","115"],         stops:["Lingampally","Miyapur","JNTU","Kukatpally","Ameerpet","Koti"],duration:"80 min",distance:"30 km",firstBus:"5:30 AM",lastBus:"10:00 PM"},
+  {id:"R08",from:"Hitech City",to:"Secunderabad",buses:["127K","5K","10H"],  stops:["Hitech City","Madhapur","Ameerpet","Lakdikapul","Secunderabad"],duration:"45 min",distance:"16 km",firstBus:"5:00 AM",lastBus:"11:30 PM"},
+  {id:"R09",from:"Ameerpet",to:"Koti",          buses:["2K","5K","49"],      stops:["Ameerpet","Nampally","Abids","Koti"],duration:"25 min",distance:"7 km",firstBus:"5:00 AM",lastBus:"11:45 PM"},
+  {id:"R10",from:"Dilsukhnagar",to:"Mehdipatnam",buses:["216M","102"],       stops:["Dilsukhnagar","LB Nagar","Uppal","Ameerpet","Mehdipatnam"],duration:"65 min",distance:"24 km",firstBus:"6:00 AM",lastBus:"10:30 PM"}
+];
+const STOPS=[...new Set(ROUTES.flatMap(r=>r.stops))].sort();
+function gR(k,d=[]){try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}}
+function sR(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getDelays(){return gR('delays',[])} function getCrowds(){return gR('crowds',[])}
+function getCurUser(){try{return JSON.parse(localStorage.getItem('curUser'))}catch{return null}}
+function getLatestCrowd(bn){const r=getCrowds().filter(x=>x.bn===bn).sort((a,b)=>b.ts-a.ts);return r.length?r[0].level:null}
+function getLatestDelay(bn){const r=getDelays().filter(x=>x.bn===bn).sort((a,b)=>b.ts-a.ts);return r.length?r[0].delay:null}
+function crowdBadge(l){if(!l)return '<span class="badge b-b">No data</span>';if(l==='Empty')return '<span class="badge b-g">🟢 Empty</span>';if(l==='Moderate')return '<span class="badge b-y">🟡 Moderate</span>';return '<span class="badge b-r">🔴 Full</span>';}
+let tw;function toast(type,title,msg=''){if(!tw){tw=document.createElement('div');tw.className='toast-wrap';document.body.appendChild(tw);}const ico={success:'✅',warning:'⚠️',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span class="t-ico">${ico[type]}</span><div class="t-body"><div class="t-ttl">${title}</div>${msg?`<div class="t-msg">${msg}</div>`:''}</div><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;tw.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+/* Init default users */
+if(!localStorage.getItem('users'))sR('users',[{id:'admin1',name:'Admin',email:'admin@transit.com',pw:btoa('admin123'),role:'admin'},{id:'user1',name:'Demo User',email:'demo@user.com',pw:btoa('demo123'),role:'user'}]);
+
+/* Nav */
+function setupNav(){const u=getCurUser();const r=document.getElementById('navR');if(!r)return;r.innerHTML=u?`<div style="display:flex;align-items:center;gap:8px"><div class="ava">${u.name[0]}</div><span style="font-size:0.87rem;color:var(--t2)">${u.name}</span></div><button class="btn btn-s btn-sm" onclick="localStorage.removeItem('curUser');location.href='index.html'">Logout</button>`:`<a href="login.html" class="btn btn-p btn-sm">Login</a>`;}
+setupNav();
+
+/* Stops */
+STOPS.forEach(s=>{['fromS','toS'].forEach(id=>{const o=document.createElement('option');o.value=o.textContent=s;document.getElementById(id).appendChild(o);});});
+
+/* Prefill from URL */
+const p=new URLSearchParams(location.search);
+if(p.get('from'))document.getElementById('fromS').value=p.get('from');
+if(p.get('to'))  document.getElementById('toS').value=p.get('to');
+if(p.get('from')&&p.get('to'))doSearch();
+
+function routeCardHTML(r,from,to){
+  const drs=getDelays().filter(d=>r.buses.includes(d.bn));
+  const crs=getCrowds().filter(c=>r.buses.includes(c.bn));
+  const latC=crs.length?crs.sort((a,b)=>b.ts-a.ts)[0].level:null;
+  const latD=drs.length?drs.sort((a,b)=>b.ts-a.ts)[0].delay:null;
+  return `<div class="route-card" onclick="location.href='tracking.html?route=${r.id}'">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${r.buses.map(b=>`<span class="chip">${b}</span>`).join('')}</div>
+      ${latD?`<span class="badge b-y">+${latD}min</span>`:'<span class="badge b-g">On Time</span>'}
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:10px;font-size:0.83rem">
+      ${r.stops.map((s,i)=>`
+        <span style="color:${from&&s.toLowerCase()===from.toLowerCase()||to&&s.toLowerCase()===to.toLowerCase()?'var(--accent)':'var(--t2)'}">${s}</span>
+        ${i<r.stops.length-1?'<span style="color:var(--accent);font-size:0.7rem">›</span>':''}
+      `).join('')}
+    </div>
+    <div style="display:flex;gap:14px;font-size:0.78rem;color:var(--t3);flex-wrap:wrap">
+      <span>⏱ ${r.duration}</span><span>📏 ${r.distance}</span><span>🕐 ${r.firstBus}</span><span>🕙 ${r.lastBus}</span>
+    </div>
+    ${latC?`<div style="margin-top:10px">${crowdBadge(latC)}</div>`:''}
+  </div>`;
+}
+
+function doSearch(){
+  const from=document.getElementById('fromS').value;
+  const to=  document.getElementById('toS').value;
+  if(!from||!to){toast('warning','Select both stops');return;}
+  if(from===to){toast('error','Same stop selected');return;}
+  const matched=ROUTES.filter(r=>{const sl=r.stops.map(s=>s.toLowerCase());return sl.includes(from.toLowerCase())&&sl.includes(to.toLowerCase());});
+  const partial=ROUTES.filter(r=>!matched.includes(r)&&(r.from.toLowerCase().includes(from.toLowerCase())||r.to.toLowerCase().includes(to.toLowerCase())));
+  const all=[...matched,...partial];
+  const el=document.getElementById('results');
+  if(!all.length){el.innerHTML=`<div class="card tc" style="padding:36px"><div style="font-size:2.5rem;margin-bottom:12px">😕</div><h3>No direct route found</h3><p style="color:var(--t2);margin-top:6px">Try nearby stops or check all routes below.</p></div>`;return;}
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2 style="font-size:1.2rem">Found <span style="color:var(--accent)">${all.length}</span> route${all.length!==1?'s':''} — ${from} → ${to}</h2><button class="btn btn-s btn-sm" onclick="document.getElementById('results').innerHTML=''">✕ Clear</button></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px">${all.map(r=>routeCardHTML(r,from,to)).join('')}</div>`;
+}
+
+function renderAll(){document.getElementById('allRoutes').innerHTML=ROUTES.map(r=>routeCardHTML(r,null,null)).join('');}
+renderAll();
+</script>
+</body>
+</html>
